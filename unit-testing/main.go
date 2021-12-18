@@ -48,7 +48,12 @@ func main() {
 
 	// FizzBuzz the input and print the results
 	fmt.Println(fmt.Sprintf("FizzBuzzing %d number(s), fizzing at %d and buzzing at %d:", total, fizzAt, buzzAt))
-	for _, result := range fizzbuzz.FizzBuzz(total, fizzAt, buzzAt) {
+	result, err := fizzbuzz.FizzBuzz(total, fizzAt, buzzAt)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for _, result := range result {
 		fmt.Println(result)
 	}
 

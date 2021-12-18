@@ -1,6 +1,7 @@
 package fizzbuzz
 
 import (
+	"errors"
 	"strconv"
 )
 
@@ -13,7 +14,20 @@ import (
 //   `buzzAt` values.
 // - Return the original number if is is not divisible by either the `fizzAt` or
 //   the `buzzAt` values.
-func FizzBuzz(total, fizzAt, buzzAt int64) []string {
+func FizzBuzz(total, fizzAt, buzzAt int64) ([]string, error) {
+
+	if fizzAt == 0 {
+		return nil, errors.New("fizzAt can't be zero")
+	}
+
+	if buzzAt == 0 {
+		return nil, errors.New("buzzAt can't be zero")
+	}
+
+	if total > 64 {
+		return nil, errors.New("total can't be larger than 64")
+	}
+
 	result := make([]string, total)
 
 	for i := int64(1); i <= total; i++ {
@@ -31,5 +45,5 @@ func FizzBuzz(total, fizzAt, buzzAt int64) []string {
 		}
 	}
 
-	return result
+	return result, nil
 }
