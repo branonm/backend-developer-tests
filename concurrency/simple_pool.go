@@ -4,13 +4,14 @@ package concurrency
 
 import (
 	"fmt"
-	"time"
+	"sync"
 )
 
+// Job is a simple abstraction representing a unit of work
 type Job struct {
-	number int
+	number  int
 	execute func(int) int
-	result chan int
+	result  chan int
 }
 
 // SimplePool is a simple worker pool that does not support cancellation or
@@ -23,58 +24,56 @@ type SimplePool interface {
 	Stop()
 }
 
-func worker(jobs <-chan Job) {
-
+// worker executes Jobs passed in via channel
+func worker(jobs <-chan Job, wg *sync.WaitGroup, num int) {
+	defer wg.Done()
 	for {
 		select {
 		case job, ok := <-jobs:
 			if !ok {
-				fmt.Println("Stopping worker")
+				fmt.Printf("Stopping worker %d\n", num)
 				return
 			}
-			job.result <-job.execute(job.number)
-		default:
-			fmt.Println("Waiting for Job.")
-			time.Sleep(1 * time.Second)
-
+			job.result <- job.execute(job.number)
+			//default:
+			//	fmt.Println("Waiting for Job.")
 		}
 	}
 }
 
+// Pool is the struct that implements the SimplePool interface
 type Pool struct {
+	jobs           chan Job
 	maxConcurrency int
-	tasks          chan Job
+	wg             sync.WaitGroup
 }
 
 // NewSimplePool creates a new SimplePool that only allows the given maximum
-// concurrent tasks to run at any one time. maxConcurrent must be greater than
+// concurrent jobs to run at any one time. maxConcurrent must be greater than
 // zero.
 func NewSimplePool(maxConcurrent int) SimplePool {
 
 	pool := &Pool{
 		maxConcurrency: maxConcurrent,
-		tasks:          make(chan Job, maxConcurrent),
+		jobs:           make(chan Job, maxConcurrent),
 	}
 
-	pool.run()
+	for i := 0; i < pool.maxConcurrency; i++ {
+		pool.wg.Add(1)
+		fmt.Printf("Starting worker %d\n", i)
+		go worker(pool.jobs, &pool.wg, i)
+	}
 
 	return pool
 }
 
+// Submit pushes a Job on to the Job channel contained in Pool
 func (p *Pool) Submit(job Job) {
-	p.tasks <- job
+	p.jobs <- job
 }
 
-func (p *Pool) run() {
-
-	for i := 0; i < p.maxConcurrency; i++ {
-		go worker(p.tasks)
-	}
-}
-
+// Stop closes the Job channel allowing the workers to spin down
 func (p *Pool) Stop() {
-	close(p.tasks)
-
-	// allow worker routines to
-	time.Sleep(10 * time.Second)
+	close(p.jobs)
+	p.wg.Wait()
 }

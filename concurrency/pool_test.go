@@ -6,20 +6,25 @@ import (
 )
 
 func TestPool(t *testing.T) {
-	concurrency := 5
+	concurrency := 15
+	jobCount := 10
 	pool := NewSimplePool(concurrency)
 	jobs := make([]Job, 0)
 	jobChan := make(chan int)
+
+	// This is the 'work' that is done
 	executor := func(num int) int {
 		fmt.Printf("Hello!! I'm function %d!!\n", num)
 		return num
 	}
-	for i := 0; i < concurrency + 5; i++ {
+
+	// Allow for jobChan to demux responses from Jobs
+	for i := 0; i < jobCount; i++ {
 
 		jobs = append(jobs, Job{
-			number: i,
+			number:  i,
 			execute: executor,
-			result: jobChan,
+			result:  jobChan,
 		})
 	}
 
@@ -27,14 +32,11 @@ func TestPool(t *testing.T) {
 		pool.Submit(job)
 	}
 
-	for x := 0; x < concurrency + 5; x++{
+	for x := 0; x < jobCount; x++ {
 		select {
-		case i := <-jobChan :
+		case i := <-jobChan:
 			fmt.Printf("Recieved response from %d\n", i)
 		}
 	}
-
 	pool.Stop()
 }
-
-
