@@ -110,6 +110,7 @@ func TestGetPersonByID(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
+	// Retrieve person by id
 	c.SetPath("/people/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("df12ce76-767b-4bf0-bccb-816745df9e70")
@@ -123,6 +124,7 @@ func TestGetPersonByID(t *testing.T) {
 		assert.Equal(t, personStr, rec.Body.String())
 	}
 
+	// Test invalid UUID
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	c.SetPath("/people/:id")
@@ -134,6 +136,7 @@ func TestGetPersonByID(t *testing.T) {
 		assert.Equal(t, "Invalid UUID", rec.Body.String())
 	}
 
+	// Test valid ID but not found
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	c.SetPath("/people/:id")

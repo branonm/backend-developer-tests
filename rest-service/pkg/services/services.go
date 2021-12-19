@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// GetPeople returns either all the people in the dataset
+// or the people retrieved via various search parameters
 func GetPeople(c echo.Context) error {
 	var sb strings.Builder
 	var people []*models.Person
@@ -24,6 +26,7 @@ func GetPeople(c echo.Context) error {
 		people = models.FindPeopleByPhoneNumber(phoneNumber)
 	}
 
+	//Accumulate people in the string buffer
 	for _, person := range people {
 		personStr, err := person.ToJSON()
 
@@ -41,6 +44,7 @@ func GetPeople(c echo.Context) error {
 	return c.String(http.StatusOK, returnString)
 }
 
+// GetPersonByID returns the person with the matching UUID
 func GetPersonByID(c echo.Context) error {
 	id := c.Param("id")
 	uuid, err := uuid.FromString(id)
